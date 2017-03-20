@@ -54,18 +54,18 @@ void *my_bestfit_malloc(int size){
 		//best does not exist, create new node and allocate more space
 		if(best == NULL){
 			brk = sbrk(size+sizeof(struct Node)); //allocate all space on heap
-			struct Node *new_node = (struct Node *)brk +1;
+			struct Node *new_node = (struct Node *)brk;
 			//create new node with space allocated
 			new_node->size = size+sizeof(struct Node);
 			new_node->occupied = 1;
 			new_node->next = NULL;
 			new_node->previous = tail;
 			tail = new_node;
-			return (new_node + sizeof(struct Node));
+			return (void *)(new_node + sizeof(struct Node));
 		} else {
 			//we have a best fit in empty space
 			best->occupied=1;
-			return (best + sizeof(struct Node));
+			return (void *)(best + sizeof(struct Node));
 		}
 	}
 }
@@ -74,20 +74,43 @@ void my_free(void *ptr){
 	struct Node *current = head;	//get head node
 	struct Node *node = ptr - sizeof(struct Node); // get the pointer to the node in memory section
 	void *brk = sbrk(0); //check current value of brk
-	int size = node->size;
 	//find node in LL
 	while(current != node){
 		current = current->next;
 	}
-	//delete node
-	(current->next)->previous = current->previous;
-	(current->previous)->next = current->next;
-	//check previous and next for free space and coalesce if necessary
+	if(current == NULL){return;}	//node is not found, free FAILED
 
-	//free space of that size if that node touched brk
-	if(node+size == brk){
-		size = -1 * size;
-		brk = sbrk(size);
-		return;
+	//make node free space
+	current->occupied = 0;
+
+	//check previous and next for free space and coalesce if necessary
+	while((current->previous)->occupied == 0){
+		//if previous is free
+		(current->previous)->next = current->next;
+		(current->next)->previous = current->previous;
+		(current->previous)->size = (current->previous)->size + current->size - sizeof(struct Node); //set precious node's size to total new size
+		current = current->previous;
 	}
+	while((current->next)->occupied == 0){
+		//if next is free after the elimination of previous
+		current->size= current->size + (current->next)->size + sizeof(struct Node);	//combine sizes
+		current->next=((current->next)->next);
+		current = current->next;
+	}
+	//free space of that size if that node touched brk
+	if(current+current->size == brk){
+		brk = sbrk(-1 * current->size);
+	}
+	//check status of head
+	while(current->previous != NULL){
+		current = current->previous;
+	}
+	head = current;
+	//check status of tail
+	while(current->next != NULL){
+		current = current->next;
+	}
+	// set new tail node
+	tail = current;
+	return;
 }
