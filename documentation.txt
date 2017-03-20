@@ -1,0 +1,24 @@
+Linked List Node: I used an int for size, an int for occupied status of the node, and two pointer references to create a doubly linked list
+
+For allocation:
+	If the Linked List (LL) is empty, I add the new node to the head after allocating space for the node using sbrk.  I then allocate the remaining
+	requested amount for return to the caller.
+	If the LL is not empty, I use the best fit algorithm to find the "best" location for the memory and use that node for return to the caller. 
+		If there is no best fit in the LL, I allocate space using sbrk for a new node, fill the node appropriately, then allocate remaining 
+		requested space for return to the caller.
+		If there is a best fit, I set the occupied status of the node to "1" then return the space of that Node offset by the size of a Node.
+
+For deallocation:
+	First, I search through the LL for the Node at the location we are given by subtracting the size of a Node from the pointer given as input. 
+	Then, I set its occupied status to 0.  
+	I then move backwards from the node, checking for other open space that can be combined with the current node.  I then do the same going forward.
+	I check the status of the tail. If it is unoccupied space, I deallocate space on the heap with a negative offset sent to sbrk.  
+	
+	To be sure the LL functions properly, I check the status of both the head and the tail and set them as required.  Then the function returns.
+
+Known Issues: 
+	I am aware of a Segmentation Fault error that results from my_free. After using gdb and other tools, I was able to determine that I am attempting
+	to dereference a NULL-pointer.  All actions I have taken to correct this error have failed, including putting checks and controls to prevent
+	a NULL value from reaching that point in the code.
+
+	

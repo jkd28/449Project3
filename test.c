@@ -1,3 +1,8 @@
+/*
+John Dott
+COE 0449: Project 3
+3/19/17
+*/
 #include <stdlib.h>
 #include <stdio.h>
 #include "mymalloc.h"
